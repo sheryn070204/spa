@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
+            color: white;
+            padding: 40px;
+        }
+
+        .ui.container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .cart-item {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .cart-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .cart-item .content {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .cart-item .header {
+            color: white !important;
+        }
+
+        .cart-item .meta {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .cart-item .description {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .cart-item .price {
+            color: #ff6a00;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .cart-item .quantity {
+            color: #4caf50;
+            font-size: 1.1em;
+        }
+
+        .ui.button {
+            background: linear-gradient(to right, #ff6a00, #ee0979) !important;
+            color: white !important;
+            border-radius: 2em !important;
+        }
+
+        .ui.button:hover {
+            background: linear-gradient(to right, #ee0979, #ff6a00) !important;
+        }
+
+        .ui.message {
+            background: rgba(255, 75, 43, 0.2) !important;
+            color: #ff4b2b !important;
+            border: 1px solid #ff4b2b !important;
+        }
+
+        .product-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .cart-summary {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .cart-summary .header {
+            color: white !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .cart-summary .total {
+            color: #ff6a00;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 3rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .empty-cart i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="ui container" 
+         x-data="{ 
+            cart: [],
+            loading: true,
+            errorMessage: '',
+            apiBaseUrl: 'http://172.17.100.14:3342/cuabo2/api/shop',
+            
+            init() {
+                this.loadCart();
+            },
+
+            loadCart() {
+                const savedCart = localStorage.getItem('shopCart');
+                if (savedCart) {
+                    this.cart = JSON.parse(savedCart);
+                }
+                this.loading = false;
+            },
+
+            async updateQuantity(item, change) {
+                try {
+                    const index = this.cart.findIndex(i => i.id === item.id);
+                    if (index !== -1) {
+                        const newQuantity = this.cart[index].quantity + change;
+                        
+                        if (newQuantity <= 0) {
+                            this.removeItem(item);
+                            return;
+                        }
+
+                        // Check stock availability from backend
+                        const response = await fetch(`${this.apiBaseUrl}/products/${item.id}/`);
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch product details');
+                        }
+                        
+                        const product = await response.json();
+                        
+                        // Update the item's stock information
+                        this.cart[index].stock = product.stock;
+                        
+                        if (newQuantity > product.stock) {
+                            this.errorMessage = `Only ${product.stock} items available in stock!`;
+                            setTimeout(() => { this.errorMessage = ''; }, 3000);
+                            return;
+                        }
+
+                        // If increasing quantity, temporarily reduce stock in backend
+                        if (change > 0) {
+                            const updateResponse = await fetch(`${this.apiBaseUrl}/products/${item.id}/update_stock/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    stock: product.stock - 1
+                                })
+                            });
+
+                            if (!updateResponse.ok) {
+                                throw new Error('Failed to update stock');
+                            }
+                        } 
+                        // If decreasing quantity, restore stock in backend
+                        else if (change < 0) {
+                            const updateResponse = await fetch(`${this.apiBaseUrl}/products/${item.id}/update_stock/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    stock: product.stock + 1
+                                })
+                            });
+
+                            if (!updateResponse.ok) {
+                                throw new Error('Failed to update stock');
+                            }
+                        }
+
+                        // Update cart if stock is available
+                        this.cart[index].quantity = newQuantity;
+                        this.saveCart();
+                    }
+                } catch (error) {
+                    console.error('Error updating quantity:', error);
+                    this.errorMessage = 'Failed to update quantity. Please try again.';
+                    setTimeout(() => { this.errorMessage = ''; }, 3000);
+                }
+            },
+
+            async removeItem(item) {
+                try {
+                    // Restore stock when removing item from cart
+                    const response = await fetch(`${this.apiBaseUrl}/products/${item.id}/`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch product details');
+                    }
+                    
+                    const product = await response.json();
+                    
+                    // Restore the stock that was reserved for this item
+                    const updateResponse = await fetch(`${this.apiBaseUrl}/products/${item.id}/update_stock/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            stock: product.stock + item.quantity
+                        })
+                    });
+
+                    if (!updateResponse.ok) {
+                        throw new Error('Failed to update stock');
+                    }
+
+                    this.cart = this.cart.filter(i => i.id !== item.id);
+                    this.saveCart();
+                } catch (error) {
+                    console.error('Error removing item:', error);
+                    this.errorMessage = 'Failed to remove item. Please try again.';
+                    setTimeout(() => { this.errorMessage = ''; }, 3000);
+                }
+            },
+
+            saveCart() {
+                localStorage.setItem('shopCart', JSON.stringify(this.cart));
+                Alpine.store('shopStore').cart = this.cart;
+            },
+
+            getTotal() {
+                return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            },
+
+            getItemTotal(item) {
+                return item.price * item.quantity;
+            },
+
+            async clearCart() {
+                try {
+                    // For each item in the cart, restore its stock in the backend
+                    for (const item of this.cart) {
+                        // Fetch current product stock
+                        const response = await fetch(`${this.apiBaseUrl}/products/${item.id}/`);
+                        if (!response.ok) continue; // skip if error
+
+                        const product = await response.json();
+
+                        // Restore the stock that was reserved for this item
+                        await fetch(`${this.apiBaseUrl}/products/${item.id}/update_stock/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                stock: product.stock + item.quantity
+                            })
+                        });
+                    }
+                    // Now clear the cart
+                    this.cart = [];
+                    this.saveCart();
+                } catch (error) {
+                    console.error('Error clearing cart:', error);
+                    this.errorMessage = 'Failed to clear cart. Please try again.';
+                    setTimeout(() => { this.errorMessage = ''; }, 3000);
+                }
+            },
+
+            checkout() {
+                // Implement checkout logic here
+                alert('Checkout functionality will be implemented soon!');
+            }
+         }">
+        <h1 class="page-title">Shopping Cart</h1>
+
+        <div class="ui message" x-show="errorMessage">
+            <div class="header">Error</div>
+            <p x-text="errorMessage"></p>
+        </div>
+
+        <template x-if="cart.length === 0">
+            <div class="empty-cart">
+        <i class="shopping cart icon"></i>
+                <h2>Your cart is empty</h2>
+                <p>Add some products to your cart to see them here.</p>
+                <button class="ui button" onclick="window.location.href='index.html#shop/shop_home'">
+                    Continue Shopping
+                </button>
+      </div>
+        </template>
+
+        <template x-if="cart.length > 0">
+            <div>
+                <div class="ui divided items">
+                    <template x-for="item in cart" :key="item.id">
+                        <div class="cart-item item">
+                            <div class="image">
+                                <img :src="item.image || 'https://placehold.co/100x100?text=No+Image'" 
+                                     :alt="item.name"
+                                     class="product-image">
+                    </div>
+                    <div class="content">
+                      <div class="header" x-text="item.name"></div>
+                                <div class="meta">
+                                    <span class="price">$<span x-text="item.price"></span></span>
+                                </div>
+                                <div class="description" x-text="item.description"></div>
+                                <div class="extra">
+                                    <div class="ui buttons">
+                                        <button class="ui button" @click="updateQuantity(item, -1)">-</button>
+                                        <button class="ui button" x-text="item.quantity"></button>
+                                        <button class="ui button" @click="updateQuantity(item, 1)">+</button>
+                      </div>
+                                    <button class="ui red button" @click="removeItem(item)">
+                                        <i class="trash icon"></i> Remove
+                                    </button>
+                    </div>
+                  </div>
+                </div>
+                    </template>
+                </div>
+
+                <div class="cart-summary">
+                    <h3 class="header">Order Summary</h3>
+      <div class="ui grid">
+        <div class="eight wide column">
+                            <p>Total Items: <span x-text="cart.length"></span></p>
+                            <p>Total Quantity: <span x-text="cart.reduce((sum, item) => sum + item.quantity, 0)"></span></p>
+              </div>
+                        <div class="eight wide column">
+                            <p class="total">Total: $<span x-text="getTotal().toFixed(2)"></span></p>
+            </div>
+          </div>
+                    <div class="ui buttons" style="margin-top: 1rem;">
+                        <button class="ui button" @click="clearCart">
+                            <i class="trash icon"></i> Clear Cart
+                        </button>
+                        <button class="ui button" onclick="window.location.href='index.html#shop/shop_home'">
+                            <i class="arrow left icon"></i> Continue Shopping
+                        </button>
+                        <button class="ui primary button" onclick="window.location.href='index.html#shop/checkout'">
+                            <i class="credit card icon"></i> Proceed to Checkout
+                        </button>
+        </div>
+      </div>
+    </div>
+        </template>
+  </div>
+</body>
+</html>

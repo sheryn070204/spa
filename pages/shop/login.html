@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Sheryn Shop</title>
+  
+  <!-- Semantic UI CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+  
+  <!-- Alpine.js -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  
+  <!-- jQuery (required for Semantic UI) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
+  <!-- Semantic UI JS -->
+  <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
+      color: white;
+      padding: 40px;
+    }
+
+    .ui.container {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-title {
+      color: #ffffff;
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    .ui.segment {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 2rem;
+    }
+
+    .ui.form input,
+    .ui.form textarea {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: white !important;
+    }
+
+    .ui.form label {
+      color: white !important;
+    }
+
+    .ui.form input:focus,
+    .ui.form textarea:focus {
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-color: #ff6a00 !important;
+      box-shadow: 0 0 10px rgba(255, 106, 0, 0.5);
+    }
+
+    .ui.button {
+      background: linear-gradient(to right, #ff6a00, #ee0979) !important;
+      color: white !important;
+      border-radius: 2em !important;
+    }
+
+    .ui.button:hover {
+      background: linear-gradient(to right, #ee0979, #ff6a00) !important;
+    }
+
+    .ui.blue.button {
+      background: linear-gradient(to right, #21d4fd, #b721ff) !important;
+    }
+
+    .ui.blue.button:hover {
+      background: linear-gradient(to right, #1b92e0, #8a15db) !important;
+    }
+
+    .ui.green.button {
+      background: linear-gradient(to right, #00b09b, #96c93d) !important;
+    }
+
+    .ui.green.button:hover {
+      background: linear-gradient(to right, #96c93d, #00b09b) !important;
+    }
+
+    .ui.message {
+      background: rgba(255, 75, 43, 0.2) !important;
+      color: #ff4b2b !important;
+      border: 1px solid #ff4b2b !important;
+    }
+
+    .ui.message.success {
+      background: rgba(76, 175, 80, 0.2) !important;
+      color: #4caf50 !important;
+      border: 1px solid #4caf50 !important;
+    }
+
+    .ui.checkbox label {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .ui.checkbox input:checked ~ label:before {
+      background: #ff6a00 !important;
+      border-color: #ff6a00 !important;
+    }
+
+    .ui.divider {
+      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .ui.facebook.button {
+      background: #3b5998 !important;
+    }
+
+    .ui.google.plus.button {
+      background: #dd4b39 !important;
+    }
+
+    .ui.modal {
+      background: #1c1c1c !important;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .ui.modal > .header {
+      background: rgba(255, 255, 255, 0.05) !important;
+      color: white !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .ui.modal > .content {
+      background: #1c1c1c !important;
+      color: white !important;
+    }
+
+    .ui.modal > .actions {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .ui.modal .ui.button {
+      color: white !important;
+    }
+
+    .ui.modal .ui.button:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .ui.modal .ui.positive.button {
+      background: linear-gradient(to right, #00b09b, #96c93d) !important;
+    }
+
+    .ui.modal .ui.positive.button:hover {
+      background: linear-gradient(to right, #96c93d, #00b09b) !important;
+    }
+
+    .ui.modal .ui.cancel.button {
+      background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .ui.modal .ui.cancel.button:hover {
+      background: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .ui.header {
+      color: white !important;
+    }
+
+    .ui.header .sub.header {
+      color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    .ui.basic.label {
+      background: rgba(255, 255, 255, 0.05) !important;
+      color: #ff4b2b !important;
+      border-color: rgba(255, 75, 43, 0.3) !important;
+    }
+
+    .ui.vertical.divider {
+      color: rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .ui.vertical.divider:before,
+    .ui.vertical.divider:after {
+      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .ui.horizontal.divider {
+      color: rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .ui.horizontal.divider:before,
+    .ui.horizontal.divider:after {
+      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .ui.left.icon.input > i.icon {
+      color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    .ui.left.icon.input > input {
+      padding-left: 3em !important;
+    }
+
+    .ui.left.icon.input > input:focus + i.icon {
+      color: #ff6a00 !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="ui container" x-data="loginSystem()" x-init="init()">
+  <div class="ui segment">
+    <h1 class="ui header">Account Access</h1>
+    
+    <div class="ui two column middle aligned very relaxed stackable grid">
+      <div class="column">
+        <form class="ui form" @submit.prevent="loginUser()">
+          <h2 class="ui header">Login</h2>
+          <div class="field" :class="{ 'error': loginFormErrors.email }">
+            <label>Email</label>
+            <div class="ui left icon input">
+              <input type="email" x-model="loginForm.email" placeholder="Email address" required>
+              <i class="user icon"></i>
+            </div>
+            <div class="ui pointing red basic label" x-show="loginFormErrors.email" x-text="loginFormErrors.email"></div>
+          </div>
+          <div class="field" :class="{ 'error': loginFormErrors.password }">
+            <label>Password</label>
+            <div class="ui left icon input">
+              <input type="password" x-model="loginForm.password" placeholder="Password" required>
+              <i class="lock icon"></i>
+            </div>
+            <div class="ui pointing red basic label" x-show="loginFormErrors.password" x-text="loginFormErrors.password"></div>
+          </div>
+          <div class="field">
+            <div class="ui checkbox">
+              <input type="checkbox" x-model="loginForm.rememberMe">
+              <label>Remember me</label>
+            </div>
+          </div>
+          <button class="ui blue submit button" type="submit" :class="{ 'loading': isLoggingIn }">Login</button>
+          
+          <div class="ui error message" x-show="loginError">
+            <div class="header">Login Failed</div>
+            <p x-text="loginError"></p>
+          </div>
+          
+          <div class="ui message">
+            <div class="ui horizontal divider">Or</div>
+            <div class="ui centered grid">
+              <div class="column">
+                <button class="ui facebook button" type="button">
+                  <i class="facebook icon"></i>
+                  Login with Facebook
+                </button>
+                <button class="ui google plus button" type="button">
+                  <i class="google icon"></i>
+                  Login with Google
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="ui message">
+            <p><a href="#" @click.prevent="forgotPassword()">Forgot Password?</a></p>
+          </div>
+          
+          <div class="ui message">
+            <p><a href="#" @click.prevent="guestCheckout()">Continue as Guest</a></p>
+          </div>
+        </form>
+      </div>
+      
+      <div class="ui vertical divider">
+        Or
+      </div>
+      
+      <div class="column">
+        <form class="ui form" @submit.prevent="registerUser()">
+          <h2 class="ui header">Register</h2>
+          <div class="field" :class="{ 'error': registerFormErrors.firstName }">
+            <label>First Name</label>
+            <input type="text" x-model="registerForm.firstName" placeholder="First Name" required>
+            <div class="ui pointing red basic label" x-show="registerFormErrors.firstName" x-text="registerFormErrors.firstName"></div>
+          </div>
+          <div class="field" :class="{ 'error': registerFormErrors.lastName }">
+            <label>Last Name</label>
+            <input type="text" x-model="registerForm.lastName" placeholder="Last Name" required>
+            <div class="ui pointing red basic label" x-show="registerFormErrors.lastName" x-text="registerFormErrors.lastName"></div>
+          </div>
+          <div class="field" :class="{ 'error': registerFormErrors.email }">
+            <label>Email</label>
+            <input type="email" x-model="registerForm.email" placeholder="Email" required>
+            <div class="ui pointing red basic label" x-show="registerFormErrors.email" x-text="registerFormErrors.email"></div>
+          </div>
+          <div class="field" :class="{ 'error': registerFormErrors.password }">
+            <label>Password</label>
+            <input type="password" x-model="registerForm.password" placeholder="Password" required>
+            <div class="ui pointing red basic label" x-show="registerFormErrors.password" x-text="registerFormErrors.password"></div>
+          </div>
+          <div class="field" :class="{ 'error': registerFormErrors.confirmPassword }">
+            <label>Confirm Password</label>
+            <input type="password" x-model="registerForm.confirmPassword" placeholder="Confirm Password" required>
+            <div class="ui pointing red basic label" x-show="registerFormErrors.confirmPassword" x-text="registerFormErrors.confirmPassword"></div>
+          </div>
+          <div class="field">
+            <div class="ui checkbox">
+              <input type="checkbox" x-model="registerForm.acceptTerms" required>
+              <label>I agree to the <a href="#" @click.prevent="showTerms()">Terms and Conditions</a></label>
+            </div>
+            <div class="ui pointing red basic label" x-show="registerFormErrors.acceptTerms" x-text="registerFormErrors.acceptTerms"></div>
+          </div>
+          <button class="ui green submit button" type="submit" :class="{ 'loading': isRegistering }">Register</button>
+          
+          <div class="ui error message" x-show="registerError">
+            <div class="header">Registration Failed</div>
+            <p x-text="registerError"></p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Password Recovery Modal -->
+  <div class="ui small modal" id="passwordRecoveryModal">
+    <i class="close icon"></i>
+    <div class="header">
+      Password Recovery
+    </div>
+    <div class="content">
+      <form class="ui form" @submit.prevent="recoverPassword()">
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" x-model="passwordRecoveryEmail" placeholder="Enter your email address" required>
+        </div>
+        <div class="ui message" x-show="passwordRecoveryMessage">
+          <p x-text="passwordRecoveryMessage"></p>
+        </div>
+      </form>
+    </div>
+    <div class="actions">
+      <div class="ui cancel button">Cancel</div>
+      <div class="ui positive right labeled icon button" @click="recoverPassword()">
+        Send Recovery Email
+        <i class="checkmark icon"></i>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Terms and Conditions Modal -->
+  <div class="ui modal" id="termsModal">
+    <i class="close icon"></i>
+    <div class="header">
+      Terms and Conditions
+    </div>
+    <div class="scrolling content">
+      <h3>User Agreement</h3>
+      <p>Welcome to our online shop. By accessing or using this website, you agree to be bound by these Terms and Conditions.</p>
+      
+      <h4>1. Account Registration</h4>
+      <p>To access certain features of the website, you may be required to register for an account. You agree to provide accurate, current, and complete information during the registration process and to update such information to keep it accurate, current, and complete.</p>
+      
+      <h4>2. Privacy Policy</h4>
+      <p>Your use of the website is also governed by our Privacy Policy, which is incorporated into these Terms and Conditions by reference.</p>
+      
+      <h4>3. Online Purchases</h4>
+      <p>We attempt to be as accurate as possible with product descriptions, pricing, and availability information. However, we do not warrant that product descriptions, pricing, or other content of this website is accurate, complete, reliable, current, or error-free.</p>
+      
+      <h4>4. Shipping & Delivery</h4>
+      <p>Shipping times are estimates and cannot be guaranteed. We are not responsible for delays due to carriers, customs, or other circumstances outside our direct control.</p>
+      
+      <h4>5. Returns & Refunds</h4>
+      <p>Products may be returned within 30 days of delivery for a full refund. Items must be unused and in original packaging.</p>
+      
+      <h4>6. User Conduct</h4>
+      <p>You agree not to use the website to:</p>
+      <ul>
+        <li>Violate any applicable law or regulation</li>
+        <li>Infringe the rights of any third party</li>
+        <li>Attempt to gain unauthorized access to other computer systems</li>
+        <li>Interfere with another user's use and enjoyment of the website</li>
+      </ul>
+      
+      <h4>7. Limitation of Liability</h4>
+      <p>We shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the website.</p>
+      
+      <h4>8. Changes to Terms</h4>
+      <p>We reserve the right to modify these terms at any time. Your continued use of the website following any changes constitutes your acceptance of the new terms.</p>
+      
+      <h4>9. Governing Law</h4>
+      <p>These Terms and Conditions shall be governed by and construed in accordance with the laws of the jurisdiction in which the company is registered.</p>
+    </div>
+    <div class="actions">
+      <div class="ui approve button">I Accept</div>
+      <div class="ui cancel button">I Decline</div>
+    </div>
+  </div>
+  
+  <!-- Success Message Modal -->
+  <div class="ui small modal" id="successModal">
+    <i class="close icon"></i>
+    <div class="header" x-text="successModalTitle">
+      Success
+    </div>
+    <div class="content">
+      <div class="ui success message">
+        <div class="header" x-text="successModalHeader"></div>
+        <p x-text="successModalMessage"></p>
+      </div>
+    </div>
+    <div class="actions">
+      <div class="ui positive button" @click="handleSuccessModalClose()">OK</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function loginSystem() {
+  return {
+    // Login Form
+    loginForm: {
+      email: '',
+      password: '',
+      rememberMe: false
+    },
+    loginFormErrors: {},
+    loginError: '',
+    isLoggingIn: false,
+    
+    // Register Form
+    registerForm: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      acceptTerms: false
+    },
+    registerFormErrors: {},
+    registerError: '',
+    isRegistering: false,
+    
+    // Password Recovery
+    passwordRecoveryEmail: '',
+    passwordRecoveryMessage: '',
+    
+    // Success Modal
+    successModalTitle: '',
+    successModalHeader: '',
+    successModalMessage: '',
+    successModalCallback: null,
+    
+    // User Data
+    user: null,
+    
+    // Redirect info
+    returnToCheckout: false,
+    
+    init() {
+      // Initialize Semantic UI components
+      this.$nextTick(() => {
+        $('.ui.checkbox').checkbox();
+        $('.ui.dropdown').dropdown();
+      });
+      
+      // Check if user is coming from checkout
+      this.returnToCheckout = localStorage.getItem('returnToCheckout') === 'true';
+      
+      // Check if user is already logged in
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        try {
+          this.user = JSON.parse(userData);
+          
+          // Initialize global store if it doesn't exist
+          if (!Alpine.store('shopStore')) {
+            Alpine.store('shopStore', {
+              cart: [],
+              user: this.user,
+              apiBaseUrl: 'http://172.17.100.14:3342/cuabo2/api'
+            });
+          } else {
+            Alpine.store('shopStore').user = this.user;
+          }
+          
+          // If user is already logged in and coming from checkout, redirect
+          if (this.returnToCheckout) {
+            this.redirectToCheckout();
+          }
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+          localStorage.removeItem('userData');
+        }
+      }
+      
+      // Pre-fill email if saved
+      const savedEmail = localStorage.getItem('savedEmail');
+      if (savedEmail) {
+        this.loginForm.email = savedEmail;
+        this.loginForm.rememberMe = true;
+      }
+    },
+    
+    validateLoginForm() {
+      this.loginFormErrors = {};
+      let isValid = true;
+      
+      if (!this.loginForm.email) {
+        this.loginFormErrors.email = 'Email is required';
+        isValid = false;
+      } else if (!/^\S+@\S+\.\S+$/.test(this.loginForm.email)) {
+        this.loginFormErrors.email = 'Invalid email format';
+        isValid = false;
+      }
+      
+      if (!this.loginForm.password) {
+        this.loginFormErrors.password = 'Password is required';
+        isValid = false;
+      }
+      
+      return isValid;
+    },
+    
+    validateRegisterForm() {
+      this.registerFormErrors = {};
+      let isValid = true;
+      
+      if (!this.registerForm.firstName) {
+        this.registerFormErrors.firstName = 'First name is required';
+        isValid = false;
+      }
+      
+      if (!this.registerForm.lastName) {
+        this.registerFormErrors.lastName = 'Last name is required';
+        isValid = false;
+      }
+      
+      if (!this.registerForm.email) {
+        this.registerFormErrors.email = 'Email is required';
+        isValid = false;
+      } else if (!/^\S+@\S+\.\S+$/.test(this.registerForm.email)) {
+        this.registerFormErrors.email = 'Invalid email format';
+        isValid = false;
+      }
+      
+      if (!this.registerForm.password) {
+        this.registerFormErrors.password = 'Password is required';
+        isValid = false;
+      } else if (this.registerForm.password.length < 8) {
+        this.registerFormErrors.password = 'Password must be at least 8 characters';
+        isValid = false;
+      }
+      
+      if (!this.registerForm.confirmPassword) {
+        this.registerFormErrors.confirmPassword = 'Please confirm your password';
+        isValid = false;
+      } else if (this.registerForm.password !== this.registerForm.confirmPassword) {
+        this.registerFormErrors.confirmPassword = 'Passwords do not match';
+        isValid = false;
+      }
+      
+      if (!this.registerForm.acceptTerms) {
+        this.registerFormErrors.acceptTerms = 'You must accept the Terms and Conditions';
+        isValid = false;
+      }
+      
+      return isValid;
+    },
+    
+    loginUser() {
+      if (!this.validateLoginForm()) {
+        return;
+      }
+      
+      this.isLoggingIn = true;
+      this.loginError = '';
+      
+      // In a real app, this would make an API call to authenticate the user
+      setTimeout(() => {
+        // For demo purposes, we'll simulate a successful login if email contains "user"
+        // and password length is at least 4 characters
+        const isValidLogin = this.loginForm.email.includes('user') && this.loginForm.password.length >= 4;
+        
+        if (isValidLogin) {
+          // Create user object
+          this.user = {
+            id: 1,
+            email: this.loginForm.email,
+            firstName: 'Demo',
+            lastName: 'User',
+            isAuthenticated: true
+          };
+          
+          // Save to localStorage
+          localStorage.setItem('userData', JSON.stringify(this.user));
+          
+          // Save email for future logins if remember me is checked
+          if (this.loginForm.rememberMe) {
+            localStorage.setItem('savedEmail', this.loginForm.email);
+          } else {
+            localStorage.removeItem('savedEmail');
+          }
+          
+          // Update global store
+          if (!Alpine.store('shopStore')) {
+            Alpine.store('shopStore', {
+              cart: [],
+              user: this.user,
+              apiBaseUrl: 'http://localhost:3000/sheryn/api'
+            });
+          } else {
+            Alpine.store('shopStore').user = this.user;
+          }
+          
+          // Show success message
+          this.showSuccessModal(
+            'Login Successful',
+            'Welcome Back!',
+            'You have successfully logged in to your account.',
+            () => {
+              // Redirect user appropriately
+              if (this.returnToCheckout) {
+                this.redirectToCheckout();
+              } else {
+                window.location.href = 'index.html#shop/shop_home';
+              }
+            }
+          );
+        } else {
+          this.loginError = 'Invalid email or password. Please try again.';
+        }
+        
+        this.isLoggingIn = false;
+      }, 1000);
+    },
+    
+    registerUser() {
+      if (!this.validateRegisterForm()) {
+        return;
+      }
+      
+      this.isRegistering = true;
+      this.registerError = '';
+      
+      // In a real app, this would make an API call to create a new user
+      setTimeout(() => {
+        // For demo, simulate successful registration unless email contains "taken"
+        const isEmailTaken = this.registerForm.email.includes('taken');
+        
+        if (isEmailTaken) {
+          this.registerError = 'This email address is already registered. Please use another email or login to your existing account.';
+          this.isRegistering = false;
+          return;
+        }
+        
+        // Create user object
+        this.user = {
+          id: 2, // In a real app, this would be assigned by the server
+          email: this.registerForm.email,
+          firstName: this.registerForm.firstName,
+          lastName: this.registerForm.lastName,
+          isAuthenticated: true
+        };
+        
+        // Save to localStorage
+        localStorage.setItem('userData', JSON.stringify(this.user));
+        
+        // Update global store
+        if (!Alpine.store('shopStore')) {
+          Alpine.store('shopStore', {
+            cart: [],
+            user: this.user,
+            apiBaseUrl: 'http://localhost:3000/api'
+          });
+        } else {
+          Alpine.store('shopStore').user = this.user;
+        }
+        
+        // Show success message
+        this.showSuccessModal(
+          'Registration Successful',
+          'Account Created!',
+          'Your account has been successfully created. You are now logged in.',
+          () => {
+            // Redirect user appropriately
+            if (this.returnToCheckout) {
+              this.redirectToCheckout();
+            } else {
+              window.location.href = 'index.html#shop/shop_home';
+            }
+          }
+        );
+        
+        this.isRegistering = false;
+      }, 1000);
+    },
+    
+    forgotPassword() {
+      // Reset message
+      this.passwordRecoveryMessage = '';
+      this.passwordRecoveryEmail = this.loginForm.email || '';
+      
+      // Show password recovery modal
+      $('#passwordRecoveryModal').modal('show');
+    },
+    
+    recoverPassword() {
+      if (!this.passwordRecoveryEmail || !/^\S+@\S+\.\S+$/.test(this.passwordRecoveryEmail)) {
+        this.passwordRecoveryMessage = 'Please enter a valid email address.';
+        return;
+      }
+      
+      // In a real app, this would send a password reset email
+      this.passwordRecoveryMessage = 'If an account exists with this email, a password reset link has been sent. Please check your inbox.';
+      
+      // In a real app, you would send a request to your API here
+      console.log('Password recovery requested for:', this.passwordRecoveryEmail);
+      
+      // Close modal after 3 seconds
+      setTimeout(() => {
+        $('#passwordRecoveryModal').modal('hide');
+      }, 3000);
+    },
+    
+    guestCheckout() {
+      // Clear any existing user data
+      localStorage.removeItem('userData');
+      
+      // Set returnToCheckout flag
+      localStorage.setItem('guestCheckout', 'true');
+      
+      // Redirect to checkout
+      this.redirectToCheckout();
+    },
+    
+    showTerms() {
+      // Initialize and show terms modal
+      $('#termsModal').modal({
+        onApprove: () => {
+          this.registerForm.acceptTerms = true;
+        }
+      }).modal('show');
+    },
+    
+    redirectToCheckout() {
+      // Clear returnToCheckout flag
+      localStorage.removeItem('returnToCheckout');
+      
+      // Redirect to checkout page
+      window.location.href = 'index.html#shop/shop_home';
+    },
+    
+    showSuccessModal(title, header, message, callback = null) {
+      this.successModalTitle = title;
+      this.successModalHeader = header;
+      this.successModalMessage = message;
+      this.successModalCallback = callback;
+      
+      $('#successModal').modal('show');
+    },
+    
+    handleSuccessModalClose() {
+      $('#successModal').modal('hide');
+      
+      if (this.successModalCallback) {
+        this.successModalCallback();
+      }
+    },
+    
+    getYears() {
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      for (let i = 0; i < 10; i++) {
+        years.push(currentYear + i);
+      }
+      return years;
+    }
+  };
+}
+</script>
+
+</body>
+</html>

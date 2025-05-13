@@ -1,0 +1,160 @@
+<div></div>
+<div class="ui segment" x-data="contactList" >
+
+      <!-- Display Loading Message -->
+     <div class="ui message" x-show="message" :class="messageType">
+        <p x-text="message"></p>
+    </div>
+
+    <h2 class="ui header">Edit Contact # <span x-text="contact.data.id"></span></h2>
+
+    <form class="ui form" enctype="multipart/form-data" >
+        <div class="field inline">
+            <label>ID</label>
+            <input type="text" x-model="contact.data.id" disabled>
+        </div>
+
+        <div class="field inline">
+            <label>First Name</label>
+            <input type="text" x-model="contact.data.first_name">
+        </div>
+
+        <div class="field inline">
+            <label>Last Name</label>
+            <input type="text" x-model="contact.data.last_name">
+        </div>
+
+        <div class="field inline">
+            <label>Email</label>
+            <input type="email" x-model="contact.data.email">
+        </div>
+
+        <div class="field inline">
+            <label>Phone Number</label>
+            <input type="text" x-model="contact.data.phone_number">
+        </div>
+
+        <div class="field inline">
+            <label>Address</label>
+            <input type="text" x-model="contact.data.address">
+        </div>
+
+         <!-- Avatar Upload Field -->
+         <div class="field inline">
+            <label>Avatar</label>
+            <input type="file" x-ref="avatar" @change="handleFileChange" class="ui input">
+        </div>
+
+        <!-- Avatar Codename -->
+        <div class="field inline">
+            <label>Avatar Codename</label>
+            <input type="text" x-model="contact.data.avatar_codename">
+        </div>
+
+
+        <button class="ui primary button" @click.prevent="saveChanges">Save</button>
+    </form>
+
+</div>
+
+<script>
+    // Function Factory Pattern
+    // Alpine.data() to define reactive components:
+    Alpine.data("contactList", () => ({
+        contact: Alpine.reactive({
+            data: {
+              first_name: "",
+              last_name: "",
+              email: "",
+              phone_number: "",
+              address: "",
+              avatar: null,  // Placeholder for avatar file
+              avatar_codename: ""  // Placeholder for avatar codename
+            }
+          }), // Reactive object for contact data
+        id: Alpine.store('GlobalVariable').queryParams.id, // Get ID from global store
+        message:'',
+        messageType:'',
+        avatarUrl: null, // For avatar preview
+
+        // Method to handle file change (image)
+        handleFileChange() {
+            this.contact.data.avatar = this.$refs.avatar.files[0];
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                this.avatarUrl = reader.result;  // Preview the image
+            };
+            if (this.contact.data.avatar) {
+                reader.readAsDataURL(this.contact.data.avatar);
+            }
+        },
+
+        saveChanges() {
+
+            
+            // Create FormData object to handle form submission
+                const formData = new FormData();
+
+            // Append other fields to the FormData object
+            formData.append('first_name', this.contact.data.first_name);
+            formData.append('last_name', this.contact.data.last_name);
+            formData.append('email', this.contact.data.email);
+            formData.append('phone_number', this.contact.data.phone_number);
+            formData.append('address', this.contact.data.address);
+            formData.append('avatar_codename', this.contact.data.avatar_codename);
+
+            // Check if an avatar is selected, and append it to FormData
+            if (this.contact.data.avatar) {
+                formData.append('avatar', this.contact.data.avatar);  // 'avatar' is the file input field name
+            }
+
+            // Check if all required fields are filled
+            const isFormValid = Object.values(this.contact.data).every(value => {
+                // Convert value to string, then trim and check if it is not empty
+                return value.toString().trim() !== "";
+            });  
+
+
+            if (!isFormValid) {
+                this.message = "Please fill in all required fields.";
+                this.messageType = "red"; // Red for error
+                setTimeout(() => { this.message = ""; }, 3000); // Clear message after 3 seconds
+                return; // Exit the function early
+            }
+           
+            console.log("base :", `${Alpine.store("settings").apiBaseUrl}/contact/${this.contact.data.id}/`);
+            console.log("body :" ,JSON.stringify(this.contact.data));
+
+            // You should use the FormData API to send both the image file and other form data in the same request.
+            // The JSON.stringify method will fail to correctly handle the file (avatar) because files are binary data and not simple string values that can be serialized into JSON.
+            
+            fetch(`${Alpine.store("settings").apiBaseUrl}/contact/${this.contact.data.id}/`, {
+                method: "PUT", // Use PUT to update existing contact
+                // headers: { "Content-Type": "application/json" },
+                // body: JSON.stringify(this.contact.data)
+                body: formData
+
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to update contact");
+                }
+                return response.json();
+            })
+            .then(data => {
+                this.message = "Contact updated successfully!";
+                this.messageType = "green"; // Green for success
+                setTimeout(() => { this.message = ""; }, 3000);
+            })
+            .catch(error => {
+                this.message = "Error occurred while updating contact.";
+                this.messageType = "red"; // Red for error
+            });
+        },        
+        init() {
+            this.contact.data = Alpine.store("GlobalFunctions").findContactById(this.id);
+            // Uncomment if you need to watch for ID changes
+            // this.$watch("id", () => this.findContactById()); 
+        }
+    }));
+</script>

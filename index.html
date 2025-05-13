@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sheryn Shop</title>
+
+    <!-- Semantic UI CSS -->
+    <link rel="stylesheet" href="config/localui/semantic.min.css">
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
+            color: white;
+            padding-top: 60px;
+        }
+
+        .ui.menu {
+            background: linear-gradient(to right, #000000, #2c2c2c) !important;
+            border-radius: 0 !important;
+            padding: 1em 1em;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.6);
+        }
+
+        .ui.menu .item, .ui.button {
+            color: #f1f1f1 !important;
+        }
+
+        .ui.menu .item:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .ui.dropdown.item:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .stylish-add {
+            box-shadow: 0 0 10px rgba(255, 165, 0, 0.7);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .stylish-add:hover {
+            transform: scale(1.1) rotate(-1deg);
+            background-color: #ff851b !important;
+            color: white !important;
+            box-shadow: 0 0 15px rgba(255, 133, 27, 0.9);
+        }
+
+        .ui.container {
+            margin-top: 100px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+        }
+
+        .right.menu .ui.button {
+            background: linear-gradient(90deg, #21d4fd, #b721ff);
+            color: white !important;
+            border: none;
+        }
+
+        .right.menu .ui.button:hover {
+            background: linear-gradient(90deg, #1b92e0, #8a15db);
+        }
+
+        .sticky-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            transition: all 5s ease;
+            background: rgba(0, 0, 0, 0.9) !important;
+            backdrop-filter: blur(-10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .sticky-menu.hidden {
+            transform: translateY(-100%);
+        }
+
+        .sticky-menu.visible {
+            transform: translateY(0);
+        }
+    </style>
+
+    <!-- Scripts -->
+    <script>
+        // Force default route to #shop/shop_home if no hash is present
+        if (!location.hash || location.hash === '#home/welcome') {
+            location.hash = '#shop/shop_home';
+        }
+    </script>
+    <script src="config/localjs/jquery-3.6.0.min.js"></script>
+    <script src="config/localui/semantic.min.js"></script>
+    <script defer src="config/localjs/alpine.min.js"></script>
+    <script src="config/router.js"></script>
+    <script defer src="script/app.js"></script>
+
+    <!-- Initialize Alpine Store -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('shopStore', {
+                cart: [],
+                user: null
+            });
+
+            // Load saved cart data
+            const savedCart = localStorage.getItem('shopCart');
+            if (savedCart) {
+                Alpine.store('shopStore').cart = JSON.parse(savedCart);
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="ui inverted menu" x-data="{ 
+        ...menuData,
+        isSticky: false,
+        lastScrollY: 0,
+        init() {
+            window.addEventListener('scroll', () => {
+                const currentScrollY = window.scrollY;
+                this.isSticky = currentScrollY > 50;
+                this.lastScrollY = currentScrollY;
+            });
+        }
+    }" 
+    :class="{ 'sticky-menu': true, 'visible': isSticky }">
+        <a class="item" @click="navigateTo('shop/shop_home')"><i class="home icon"></i> HOME</a>
+        <a class="item" @click="navigateTo('shop/cart')"><i class="shopping cart icon"></i>CART</a>
+        <a class="item" @click="navigateTo('shop/add_product')"><i class="plus circle icon"></i> ADD PRODUCT</a>
+        <a class="item" @click="navigateTo('shop/order_list')"><i class="list alternate icon"></i> LIST OF ORDERS</a>
+        <a class="item" @click="navigateTo('shop/checkout')"><i class="credit card icon"></i> CHECKOUT</a>
+
+        <div class="right menu" ></div>
+            <a class="ui button" @click="navigateTo('shop/login')"><i @click="navigateTo('shop/login')" class="user icon"></i> Login</a>
+        </div>
+    </div>
+
+    <div class="ui container" id="app-content">
+        <h2 class="ui header inverted">Welcome to Sheryn</h2>
+        <p>This is your dark-themed, gradient-powered Semantic UI dashboard.</p>
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('menuData', () => ({
+                initDropdown() {
+                    this.$nextTick(() => {
+                        $(this.$el).find('.ui.dropdown').dropdown({
+                            action: 'nothing' // Prevent default navigation
+                        });
+                    });
+                },
+                navigateTo(route) {
+                    window.navigateTo(route); // Call global navigateTo from router.js
+                }
+            }));
+
+            Alpine.store('GlobalVariable', {
+                queryParams: Alpine.reactive({})
+            });
+        });
+
+        document.addEventListener('alpine:initialized', () => {
+            console.log('Alpine.js initialized:', Alpine.version);
+        });
+    </script>
+</body>
+</html>

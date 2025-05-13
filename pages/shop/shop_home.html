@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Home</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <style>
+    body {
+      margin: 0;
+            font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
+      color: white;
+            padding: 40px;
+        }
+
+        .ui.container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .product-card .content {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .product-card .header {
+            color: white !important;
+        }
+
+        .product-card .meta {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .product-card .description {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .product-card .price {
+            color: #ff6a00;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .product-card .stock {
+            color: #4caf50;
+            font-size: 1.1em;
+        }
+
+        .ui.button {
+            background: linear-gradient(to right, #ff6a00, #ee0979) !important;
+            color: white !important;
+            border-radius: 2em !important;
+        }
+
+        .ui.button:hover {
+            background: linear-gradient(to right, #ee0979, #ff6a00) !important;
+        }
+
+        .ui.message {
+            background: rgba(255, 75, 43, 0.2) !important;
+            color: #ff4b2b !important;
+            border: 1px solid #ff4b2b !important;
+        }
+
+        .ui.message.success {
+            background: rgba(76, 175, 80, 0.2) !important;
+            color: #4caf50 !important;
+            border: 1px solid #4caf50 !important;
+        }
+
+        .product-image-container {
+            position: relative;
+            width: 100%;
+            padding-top: 75%; /* Creates a 4:3 aspect ratio container */
+            overflow: hidden;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .product-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .ui.card {
+            height: 100%; /* Make all cards the same height */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ui.card .content {
+            flex: 1; /* Allow content to fill remaining space */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ui.card .extra.content {
+            margin-top: auto; /* Push extra content to bottom */
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff6a00;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .cart-icon {
+            position: relative;
+        }
+  </style>
+</head>
+<body>
+    <div class="ui container" 
+         x-data="{ 
+            products: [], 
+            loading: true, 
+            errorMessage: '',
+            successMessage: '',
+            cartCount: 0,
+            apiBaseUrl: 'http://172.17.100.14:3342/cuabo2/api/shop',
+            
+            async init() {
+                await this.fetchProducts();
+                this.updateCartCount();
+            },
+
+            updateCartCount() {
+                const savedCart = localStorage.getItem('shopCart');
+                if (savedCart) {
+                    const cart = JSON.parse(savedCart);
+                    this.cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+                }
+            },
+
+            async fetchProducts() {
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/products/`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    this.products = await response.json();
+                } catch (error) {
+                    console.error('Error fetching products:', error);
+                    this.errorMessage = 'Failed to load products. Please try again later.';
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            async addToCart(product) {
+                try {
+                    // First check current stock from backend
+                    const response = await fetch(`${this.apiBaseUrl}/products/${product.id}/`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch product details');
+                    }
+                    
+                    const currentProduct = await response.json();
+                    
+                    if (!Alpine.store('shopStore')) {
+                        Alpine.store('shopStore', {
+                            cart: [],
+                            apiBaseUrl: this.apiBaseUrl
+                        });
+                    }
+
+                    const cart = Alpine.store('shopStore').cart;
+                    const existingItem = cart.find(item => item.id === product.id);
+
+                    if (existingItem) {
+                        if (existingItem.quantity < currentProduct.stock) {
+                            // Update stock in backend
+                            const updateResponse = await fetch(`${this.apiBaseUrl}/products/${product.id}/update_stock/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    stock: currentProduct.stock - 1
+                                })
+                            });
+
+                            if (!updateResponse.ok) {
+                                throw new Error('Failed to update stock');
+                            }
+
+                            existingItem.quantity++;
+                            // Update the product's stock in the cart
+                            existingItem.stock = currentProduct.stock - 1;
+                        } else {
+                            this.errorMessage = `Only ${currentProduct.stock} items available in stock!`;
+                            setTimeout(() => { this.errorMessage = ''; }, 3000);
+                            return;
+                        }
+                    } else {
+                        if (currentProduct.stock > 0) {
+                            // Update stock in backend
+                            const updateResponse = await fetch(`${this.apiBaseUrl}/products/${product.id}/update_stock/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    stock: currentProduct.stock - 1
+                                })
+                            });
+
+                            if (!updateResponse.ok) {
+                                throw new Error('Failed to update stock');
+                            }
+
+                            cart.push({
+                                id: product.id,
+                                name: product.name,
+                                price: product.price,
+                                image: product.image,
+                                stock: currentProduct.stock - 1,
+                                quantity: 1
+                            });
+                        } else {
+                            this.errorMessage = 'Product is out of stock!';
+                            setTimeout(() => { this.errorMessage = ''; }, 3000);
+                            return;
+                        }
+                    }
+
+                    // Save cart to localStorage
+                    localStorage.setItem('shopCart', JSON.stringify(cart));
+                    
+                    // Update cart count
+                    this.updateCartCount();
+                    
+                    // Show success message
+                    this.successMessage = `${product.name} added to cart!`;
+                    setTimeout(() => { this.successMessage = ''; }, 3000);
+
+                    // Refresh products to update stock display
+                    await this.fetchProducts();
+
+                } catch (error) {
+                    console.error('Error adding to cart:', error);
+                    this.errorMessage = 'Failed to add item to cart. Please try again.';
+                    setTimeout(() => { this.errorMessage = ''; }, 3000);
+                }
+            }
+         }">
+        
+        <h1 class="page-title">LUWE SHOP</h1>
+
+        <div class="ui message error" x-show="errorMessage">
+            <div class="header">Error</div>
+            <p x-text="errorMessage"></p>
+        </div>
+
+        <div class="ui message success" x-show="successMessage">
+            <div class="header">Success</div>
+            <p x-text="successMessage"></p>
+        </div>
+        <div class="ui grid">
+            <div class="sixteen wide column">
+                <div class="ui buttons" style="margin-bottom: 1rem; float: right;">
+                    <button class="ui button" onclick="window.location.href='index.html#shop/checkout'" style="position: relative;">
+                        <i class="shopping cart icon"></i> Checkout
+                        <span class="cart-count" x-text="cartCount" x-show="cartCount > 0" style="position: absolute; top: -8px; right: -135px; background: #0d1a4a; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 1;"></span>
+                    </button>
+                    <button class="ui button" onclick="window.location.href='index.html#shop/cart'">
+                        <i class="credit card icon"></i> View Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <template x-if="loading">
+            <div class="ui active centered inline loader"></div>
+        </template>
+
+        <template x-if="!loading">
+            <div class="ui three stackable cards">
+                <template x-for="product in products" :key="product.id">
+                    <div class="product-card card">
+                        <div class="product-image-container">
+                            <img :src="product.image || 'https://placehold.co/400x200?text=No+Image'" 
+                                 :alt="product.name"
+                                 class="product-image">
+                        </div>
+                        <div class="content">
+                            <div class="header" x-text="product.name"></div>
+                            <div class="meta">
+                                <span class="price">$<span x-text="product.price"></span></span>
+                                <span class="stock">Stock: <span x-text="product.stock"></span></span>
+                            </div>
+                            <div class="description" x-text="product.description"></div>
+                        </div>
+                        <div class="extra content">
+                            <button class="ui button" 
+                                    @click="addToCart(product)"
+                                    :disabled="product.stock === 0">
+                                <i class="shopping cart icon"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</body>
+</html>

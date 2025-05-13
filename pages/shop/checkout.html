@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
+            color: white;
+            padding: 40px;
+        }
+
+        .ui.container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .ui.button {
+            background: linear-gradient(to right, #ff6a00, #ee0979) !important;
+            color: white !important;
+            border-radius: 2em !important;
+        }
+
+        .ui.button:hover {
+            background: linear-gradient(to right, #ee0979, #ff6a00) !important;
+        }
+
+        .ui.message {
+            background: rgba(255, 75, 43, 0.2) !important;
+            color: #ff4b2b !important;
+            border: 1px solid #ff4b2b !important;
+        }
+
+        .ui.message.success {
+            background: rgba(76, 175, 80, 0.2) !important;
+            color: #4caf50 !important;
+            border: 1px solid #4caf50 !important;
+        }
+
+        .product-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .price-tag {
+            color: #ff6a00;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .ui.form input, .ui.form textarea {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+        }
+
+        .ui.form label {
+            color: white !important;
+        }
+
+        .ui.dropdown {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+        }
+
+        .ui.dropdown .menu {
+            background: #1c1c1c !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .ui.dropdown .menu > .item {
+            color: white !important;
+        }
+
+        .ui.dropdown .menu > .item:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="ui container" 
+         x-data="{ 
+            cart: [],
+            loading: true,
+            errorMessage: '',
+            successMessage: '',
+            apiBaseUrl: 'http://172.17.100.14:3342/cuabo2/api/shop',
+            
+            customer: {
+                name: '',
+                email: '',
+                address: '',
+                avatar: null
+            },
+            
+            payment: {
+                method: 'gcash'
+            },
+            
+            init() {
+                this.loadCart();
+            },
+
+            loadCart() {
+                const savedCart = localStorage.getItem('shopCart');
+                if (savedCart) {
+                    this.cart = JSON.parse(savedCart);
+                }
+                this.loading = false;
+            },
+
+            getTotal() {
+                return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            },
+
+            getItemTotal(item) {
+                return item.price * item.quantity;
+            },
+
+            async placeOrder() {
+                if (!this.customer.name || !this.customer.email || !this.customer.address) {
+                    this.errorMessage = 'Please fill in all required fields';
+                    setTimeout(() => { this.errorMessage = ''; }, 3000);
+                    return;
+                }
+
+                // Create FormData object for multipart/form-data
+                const formData = new FormData();
+                formData.append('name', this.customer.name);
+                formData.append('email', this.customer.email);
+                formData.append('address', this.customer.address);
+                formData.append('payment_method', this.payment.method);
+                formData.append('total_amount', this.getTotal().toString());
+                formData.append('products', JSON.stringify(this.cart));
+
+                // If there's an avatar, append it
+                if (this.customer.avatar && this.customer.avatar.startsWith('data:image')) {
+                    // Convert base64 to blob
+                    const response = await fetch(this.customer.avatar);
+                    const blob = await response.blob();
+                    formData.append('avatar', blob, 'avatar.jpg');
+                }
+
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/payments/`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Failed to place order');
+                    }
+
+                    const result = await response.json();
+                    this.successMessage = 'Order placed successfully!';
+                    
+                    // Clear cart
+                    localStorage.removeItem('shopCart');
+                    this.cart = [];
+                    
+                    // Redirect to shop home after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'shop_home.html';
+                    }, 2000);
+
+                } catch (error) {
+                    console.error('Error placing order:', error);
+                    this.errorMessage = error.message || 'Failed to place order. Please try again.';
+                    setTimeout(() => { this.errorMessage = ''; }, 3000);
+                }
+            },
+
+            async handleAvatarUpload(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // Create a preview URL for the selected image
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.customer.avatar = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+         }">
+        
+        <h1 class="page-title">Checkout</h1>
+
+        <div class="ui message" x-show="errorMessage">
+            <div class="header">Error</div>
+            <p x-text="errorMessage"></p>
+        </div>
+
+        <div class="ui message success" x-show="successMessage">
+            <div class="header">Success</div>
+            <p x-text="successMessage"></p>
+        </div>
+
+        <template x-if="cart.length === 0">
+            <div class="glass-card">
+                <h2>Your cart is empty</h2>
+                <p>Add some products to your cart before checking out.</p>
+                <button class="ui button" onclick="window.location.href='index.html#shop/shop_home'">
+                    Continue Shopping
+                </button>
+            </div>
+        </template>
+
+        <template x-if="cart.length > 0">
+            <div class="ui grid">
+                <!-- Order Summary -->
+                <div class="eight wide column">
+                    <div class="glass-card">
+                        <h3>Order Summary</h3>
+                        <div class="ui divided items">
+                            <template x-for="item in cart" :key="item.id">
+                                <div class="item">
+                                    <div class="image">
+                                        <img :src="item.image || 'https://placehold.co/100x100?text=No+Image'" 
+                                             :alt="item.name"
+                                             class="product-image">
+                                    </div>
+                                    <div class="content" style="color: white;">
+                                        <div class="header" x-text="item.name" style="color: white;"></div>
+                                        <div class="meta">
+                                            <span class="price" style="color: white;">$<span x-text="item.price" style="color: white;"></span></span>
+                                            <span x-text="'× ' + item.quantity" style="color: white;"></span>
+                                        </div>
+                                        <div class="description" x-text="item.description"></div>
+                                        <div class="extra">
+                                            <span class="price-tag">Total: $<span x-text="getItemTotal(item).toFixed(2)"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="ui divider"></div>
+                        <h3>Total: $<span x-text="getTotal().toFixed(2)"></span></h3>
+                    </div>
+                </div>
+
+                <!-- Checkout Form -->
+                <div class="eight wide column">
+                    <div class="glass-card">
+                        <h3>Customer Information</h3>
+                        <div class="ui form">
+                            <div class="field">
+                                <label>Avatar</label>
+                                <div class="ui segment" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <div class="ui two column grid">
+                                        <div class="column">
+                                            <div class="ui fluid image" style="max-width: 150px; margin: 0 auto;">
+                                                <img :src="customer.avatar || 'https://placehold.co/150x150?text=No+Avatar'" 
+                                                     class="ui rounded image"
+                                                     style="border: 2px solid rgba(255, 255, 255, 0.1);">
+                                            </div>
+                                        </div>
+                                        <div class="column" style="display: flex; align-items: center;">
+                                            <div class="ui fluid buttons">
+                                                <label class="ui button" style="margin: 0;">
+                                                    <i class="upload icon"></i> Upload Avatar
+                                                    <input type="file" 
+                                                           accept="image/*" 
+                                                           style="display: none;"
+                                                           @change="handleAvatarUpload">
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label>Name</label>
+                                <input type="text" x-model="customer.name" placeholder="Your Name" required>
+                            </div>
+                            <div class="field">
+                                <label>Email</label>
+                                <input type="email" x-model="customer.email" placeholder="Your Email" required>
+                            </div>
+                            <div class="field">
+                                <label>Address</label>
+                                <textarea x-model="customer.address" placeholder="Your Address" required></textarea>
+                            </div>
+                            
+                            <h3>Payment Method</h3>
+                            <div class="field">
+                                <select class="ui dropdown" x-model="payment.method">
+                                    <option value="gcash">COD</option>
+                                    <option value="maya">GCash</option>
+                                    <option value="paypal">PayPal</option>
+                                </select>
+                            </div>
+
+                            <div class="ui buttons" style="margin-top: 1rem;">
+                                <button class="ui button" onclick="window.location.href='index.html#shop/cart'">
+                                    <i class="arrow left icon"></i> Back to Cart
+                                </button>
+                                <button class="ui primary button" @click="placeOrder">
+                                    <i class="credit card icon"></i> Place Order
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</body>
+</html>
